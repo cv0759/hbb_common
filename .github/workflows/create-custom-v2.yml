@@ -1,0 +1,36 @@
+name: Create custom branch v2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-custom-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Add official remote and fetch
+        run: |
+          git remote add official https://github.com/rustdesk/hbb_common.git
+          git fetch official
+
+      - name: Create custom branch from official commit
+        run: |
+          git checkout -b custom-v2 69cea8d
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Modify config.rs
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/43.139.84.159:21116/g' src/config.rs
+          sed -i 's/OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=/1bi7AwZ3QaAdekGAZtNxr8KHx+FOsN16fcr94sFWvE8=/g' src/config.rs
+
+      - name: Commit and push
+        run: |
+          git add src/config.rs
+          git commit -m "Update server config"
+          git push origin custom-v2
