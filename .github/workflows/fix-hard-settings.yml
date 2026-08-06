@@ -1,0 +1,28 @@
+name: Fix hard settings for Windows
+on:
+  workflow_dispatch:
+
+jobs:
+  fix-hard-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          ref: custom-v2
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Fix HARD_SETTINGS (Windows version)
+        run: |
+          sed -i 's/pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();/pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {\n        let mut m = HashMap::new();\n        m.insert("password".to_string(), "0198d738abd01713fc6497c05c62c09f5bf487907d4f8b20124fba83a447cee033".to_string());\n        RwLock::new(m)\n    };/g' src/config.rs
+      
+      - name: Commit and push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/config.rs
+          git commit -m "Fix HARD_SETTINGS for Windows with correct password hash"
+          git push origin custom-v2
+          
+
+
