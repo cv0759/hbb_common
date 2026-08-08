@@ -1,0 +1,148 @@
+name: Add custom settings
+on:
+  workflow_dispatch:
+
+jobs:
+  add-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: custom-full
+          fetch-depth: 0
+
+      - name: Add custom settings
+        run: |
+          python3 << 'EOF'
+          with open('src/config.rs', 'r', encoding='utf-8') as f:
+              lines = f.readlines()
+          
+          new_lines = []
+          in_hard_settings = False
+          in_builtin_settings = False
+          in_overwrite_settings = False
+          in_overwrite_display_settings = False
+          
+          hard_settings_added = False
+          builtin_settings_added = False
+          overwrite_settings_added = False
+          overwrite_display_settings_added = False
+          
+          for line in lines:
+              # Find HARD_SETTINGS
+              if 'pub static ref HARD_SETTINGS' in line:
+                  in_hard_settings = True
+                  new_lines.append(line)
+                  continue
+              
+              if in_hard_settings and 'RwLock::new(m)' in line:
+                  if not hard_settings_added:
+                      # Add more hard settings
+                      indent = line[:len(line) - len(line.lstrip())]
+                      new_lines.append(f'{indent}m.insert("disable-settings".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("disable-account".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("disable-installation".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("disable-ab".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("conn-type".to_string(), "incoming".to_string());\n')
+                      hard_settings_added = True
+                  in_hard_settings = False
+                  new_lines.append(line)
+                  continue
+              
+              # Find BUILTIN_SETTINGS
+              if 'pub static ref BUILTIN_SETTINGS' in line:
+                  in_builtin_settings = True
+                  new_lines.append(line)
+                  continue
+              
+              if in_builtin_settings and 'RwLock::new(m)' in line:
+                  if not builtin_settings_added:
+                      # Add builtin settings
+                      indent = line[:len(line) - len(line.lstrip())]
+                      new_lines.append(f'{indent}let mut m = HashMap::new();\n')
+                      new_lines.append(f'{indent}m.insert("hide-tray".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-security-settings".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-network-settings".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-server-settings".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-proxy-settings".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-remote-printer-settings".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-stop-service".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("hide-help-cards".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("disable-change-permanent-password".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("disable-change-id".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}m.insert("disable-unlock-pin".to_string(), "Y".to_string());\n')
+                      builtin_settings_added = True
+                  in_builtin_settings = False
+                  new_lines.append(line)
+                  continue
+              
+              # Find OVERWRITE_SETTINGS
+              if 'pub static ref OVERWRITE_SETTINGS' in line:
+                  in_overwrite_settings = True
+                  new_lines.append(line)
+                  continue
+              
+              if in_overwrite_settings and 'Default::default()' in line:
+                  if not overwrite_settings_added:
+                      # Replace with custom settings
+                      indent = line[:len(line) - len(line.lstrip())]
+                      new_lines.append(f'{indent}{{\n')
+                      new_lines.append(f'{indent}    let mut m = HashMap::new();\n')
+                      new_lines.append(f'{indent}    m.insert("enable-file-transfer".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-audio".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-camera".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-terminal".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-remote-printer".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-tunnel".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-remote-restart".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-record-session".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-block-input".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("allow-remove-wallpaper".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-check-update".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("allow-auto-update".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    m.insert("enable-lan-discovery".to_string(), "N".to_string());\n')
+                      new_lines.append(f'{indent}    RwLock::new(m)\n')
+                      new_lines.append(f'{indent}}};\n')
+                      overwrite_settings_added = True
+                  in_overwrite_settings = False
+                  continue
+              
+              # Find OVERWRITE_DISPLAY_SETTINGS
+              if 'pub static ref OVERWRITE_DISPLAY_SETTINGS' in line:
+                  in_overwrite_display_settings = True
+                  new_lines.append(line)
+                  continue
+              
+              if in_overwrite_display_settings and 'Default::default()' in line:
+                  if not overwrite_display_settings_added:
+                      # Replace with custom settings
+                      indent = line[:len(line) - len(line.lstrip())]
+                      new_lines.append(f'{indent}{{\n')
+                      new_lines.append(f'{indent}    let mut m = HashMap::new();\n')
+                      new_lines.append(f'{indent}    m.insert("privacy_mode".to_string(), "Y".to_string());\n')
+                      new_lines.append(f'{indent}    RwLock::new(m)\n')
+                      new_lines.append(f'{indent}}};\n')
+                      overwrite_display_settings_added = True
+                  in_overwrite_display_settings = False
+                  continue
+              
+              new_lines.append(line)
+          
+          with open('src/config.rs', 'w', encoding='utf-8') as f:
+              f.writelines(new_lines)
+          
+          print("Custom settings added!")
+          print(f"HARD_SETTINGS added: {hard_settings_added}")
+          print(f"BUILTIN_SETTINGS added: {builtin_settings_added}")
+          print(f"OVERWRITE_SETTINGS added: {overwrite_settings_added}")
+          print(f"OVERWRITE_DISPLAY_SETTINGS added: {overwrite_display_settings_added}")
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/config.rs
+          git commit -m "Add custom settings for controlled client"
+          git push origin custom-full
