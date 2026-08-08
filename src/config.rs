@@ -74,9 +74,29 @@ lazy_static::lazy_static! {
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
     pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = {
+    let mut m = HashMap::new();
+    m.insert("enable-file-transfer".to_string(), "N".to_string());
+    m.insert("enable-audio".to_string(), "N".to_string());
+    m.insert("enable-camera".to_string(), "N".to_string());
+    m.insert("enable-terminal".to_string(), "N".to_string());
+    m.insert("enable-remote-printer".to_string(), "N".to_string());
+    m.insert("enable-tunnel".to_string(), "N".to_string());
+    m.insert("enable-remote-restart".to_string(), "N".to_string());
+    m.insert("enable-record-session".to_string(), "N".to_string());
+    m.insert("enable-block-input".to_string(), "N".to_string());
+    m.insert("allow-remove-wallpaper".to_string(), "Y".to_string());
+    m.insert("enable-lan-discovery".to_string(), "N".to_string());
+    m.insert("approve-mode".to_string(), "password".to_string());
+    m.insert("enable-auto-update".to_string(), "N".to_string());
+    RwLock::new(m)
+};
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = {
+    let mut m = HashMap::new();
+    m.insert("enable-privacy-mode".to_string(), "Y".to_string());
+    RwLock::new(m)
+};
     pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {
@@ -84,7 +104,22 @@ lazy_static::lazy_static! {
         m.insert("password".to_string(), "0198d738abd01713fc6497c05c62c09f5bf487907d4f8b20124fba83a447cee033".to_string());
         RwLock::new(m)
     };
-    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = {
+    let mut m = HashMap::new();
+    m.insert("hide-tray".to_string(), "Y".to_string());
+    m.insert("hide-security-settings".to_string(), "Y".to_string());
+    m.insert("hide-network-settings".to_string(), "Y".to_string());
+    m.insert("hide-display-settings".to_string(), "Y".to_string());
+    m.insert("hide-audio-settings".to_string(), "Y".to_string());
+    m.insert("hide-file-transfer-settings".to_string(), "Y".to_string());
+    m.insert("hide-record-session-settings".to_string(), "Y".to_string());
+    m.insert("disable-change-permanent-password".to_string(), "Y".to_string());
+    m.insert("disable-change-id".to_string(), "Y".to_string());
+    m.insert("disable-unlock-pin".to_string(), "Y".to_string());
+    m.insert("hide-help-cards".to_string(), "Y".to_string());
+    m.insert("remove-preset-password-warning".to_string(), "Y".to_string());
+    RwLock::new(m)
+};
 }
 
 #[cfg(target_os = "android")]
