@@ -1,0 +1,125 @@
+name: Add all custom settings v2
+on:
+  workflow_dispatch:
+
+jobs:
+  add-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: custom-full
+          fetch-depth: 0
+
+      - name: Add all custom settings
+        run: |
+          python3 << 'EOF'
+          with open('src/config.rs', 'r', encoding='utf-8') as f:
+              content = f.read()
+          
+          # 1. Fix password to plaintext (in case it's still hash)
+          content = content.replace(
+              'm.insert("password".to_string(), "0198d738abd01713fc6497c05c62c09f5bf487907d4f8b20124fba83a447cee033".to_string());',
+              'm.insert("password".to_string(), "Aa123456.".to_string());'
+          )
+          
+          # 2. Add more hard settings (find the global HARD_SETTINGS)
+          # We'll add settings before the first RwLock::new(m) after HARD_SETTINGS
+          lines = content.split('\n')
+          new_lines = []
+          in_hard_settings = False
+          hard_settings_added = False
+          hard_settings_count = 0
+          
+          for i, line in enumerate(lines):
+              if 'pub static ref HARD_SETTINGS' in line:
+                  hard_settings_count += 1
+                  in_hard_settings = True
+                  new_lines.append(line)
+                  continue
+              
+              if in_hard_settings and 'RwLock::new(m)' in line:
+                  # Only add to the second HARD_SETTINGS (global one, not android/ios)
+                  if hard_settings_count >= 2 and not hard_settings_added:
+                      indent = line[:len(line) - len(line.lstrip())]
+                      new_lines.append(f'{indent}m.insert("disable-settings".to_string(), "Y".to_string());')
+                      new_lines.append(f'{indent}m.insert("disable-account".to_string(), "Y".to_string());')
+                      new_lines.append(f'{indent}m.insert("disable-installation".to_string(), "Y".to_string());')
+                      new_lines.append(f'{indent}m.insert("disable-ab".to_string(), "Y".to_string());')
+                      new_lines.append(f'{indent}m.insert("conn-type".to_string(), "incoming".to_string());')
+                      hard_settings_added = True
+                  in_hard_settings = False
+                  new_lines.append(line)
+                  continue
+              
+              new_lines.append(line)
+          
+          content = '\n'.join(new_lines)
+          
+          # 3. Replace BUILTIN_SETTINGS
+          old_builtin = 'pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();'
+          new_builtin = '''pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = {
+    let mut m = HashMap::new();
+    m.insert("hide-tray".to_string(), "Y".to_string());
+    m.insert("hide-security-settings".to_string(), "Y".to_string());
+    m.insert("hide-network-settings".to_string(), "Y".to_string());
+    m.insert("hide-server-settings".to_string(), "Y".to_string());
+    m.insert("hide-proxy-settings".to_string(), "Y".to_string());
+    m.insert("hide-remote-printer-settings".to_string(), "Y".to_string());
+    m.insert("hide-stop-service".to_string(), "Y".to_string());
+    m.insert("hide-help-cards".to_string(), "Y".to_string());
+    m.insert("disable-change-permanent-password".to_string(), "Y".to_string());
+    m.insert("disable-change-id".to_string(), "Y".to_string());
+    m.insert("disable-unlock-pin".to_string(), "Y".to_string());
+    RwLock::new(m)
+};'''
+          content = content.replace(old_builtin, new_builtin)
+          
+          # 4. Replace OVERWRITE_SETTINGS
+          old_overwrite = 'pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();'
+          new_overwrite = '''pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = {
+    let mut m = HashMap::new();
+    m.insert("enable-file-transfer".to_string(), "N".to_string());
+    m.insert("enable-audio".to_string(), "N".to_string());
+    m.insert("enable-camera".to_string(), "N".to_string());
+    m.insert("enable-terminal".to_string(), "N".to_string());
+    m.insert("enable-remote-printer".to_string(), "N".to_string());
+    m.insert("enable-tunnel".to_string(), "N".to_string());
+    m.insert("enable-remote-restart".to_string(), "N".to_string());
+    m.insert("enable-record-session".to_string(), "N".to_string());
+    m.insert("enable-block-input".to_string(), "N".to_string());
+    m.insert("allow-remove-wallpaper".to_string(), "Y".to_string());
+    m.insert("enable-check-update".to_string(), "N".to_string());
+    m.insert("allow-auto-update".to_string(), "N".to_string());
+    m.insert("enable-lan-discovery".to_string(), "N".to_string());
+    RwLock::new(m)
+};'''
+          content = content.replace(old_overwrite, new_overwrite)
+          
+          # 5. Replace OVERWRITE_DISPLAY_SETTINGS
+          old_display = 'pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();'
+          new_display = '''pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = {
+    let mut m = HashMap::new();
+    m.insert("privacy_mode".to_string(), "Y".to_string());
+    RwLock::new(m)
+};'''
+          content = content.replace(old_display, new_display)
+          
+          with open('src/config.rs', 'w', encoding='utf-8') as f:
+              f.write(content)
+          
+          print("All custom settings added!")
+          print(f"Password fixed: {'Aa123456.' in content}")
+          print(f"BUILTIN_SETTINGS replaced: {'hide-tray' in content}")
+          print(f"OVERWRITE_SETTINGS replaced: {'enable-file-transfer' in content}")
+          print(f"OVERWRITE_DISPLAY_SETTINGS replaced: {'privacy_mode' in content}")
+          EOF
+
+      - name: Commit and push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/config.rs
+          git commit -m "Add all custom settings for controlled client v2"
+          git push origin custom-full
