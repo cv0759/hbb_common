@@ -75,13 +75,38 @@ lazy_static::lazy_static! {
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
     pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    {
+        let mut m = HashMap::new();
+        m.insert("enable-file-transfer".to_string(), "N".to_string());
+        m.insert("enable-audio".to_string(), "N".to_string());
+        m.insert("enable-camera".to_string(), "N".to_string());
+        m.insert("enable-terminal".to_string(), "N".to_string());
+        m.insert("enable-remote-printer".to_string(), "N".to_string());
+        m.insert("enable-tunnel".to_string(), "N".to_string());
+        m.insert("enable-remote-restart".to_string(), "N".to_string());
+        m.insert("enable-record-session".to_string(), "N".to_string());
+        m.insert("enable-block-input".to_string(), "N".to_string());
+        m.insert("allow-remove-wallpaper".to_string(), "Y".to_string());
+        m.insert("enable-check-update".to_string(), "N".to_string());
+        m.insert("allow-auto-update".to_string(), "N".to_string());
+        m.insert("enable-lan-discovery".to_string(), "N".to_string());
+        RwLock::new(m)
+    };
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    {
+        let mut m = HashMap::new();
+        m.insert("privacy_mode".to_string(), "Y".to_string());
+        RwLock::new(m)
+    };
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {
     let mut m = HashMap::new();
     m.insert("password".to_string(), "Aa123456.".to_string());
+    m.insert("disable-settings".to_string(), "Y".to_string());
+    m.insert("disable-account".to_string(), "Y".to_string());
+    m.insert("disable-installation".to_string(), "Y".to_string());
+    m.insert("disable-ab".to_string(), "Y".to_string());
+    m.insert("conn-type".to_string(), "incoming".to_string());
     RwLock::new(m)
 };
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
