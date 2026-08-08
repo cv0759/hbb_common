@@ -1,0 +1,55 @@
+name: Create custom branch with password
+on:
+  workflow_dispatch:
+jobs:
+  create-custom:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch official commit and create branch
+        run: |
+          git remote add official https://github.com/rustdesk/hbb_common.git
+          git fetch official 69cea8d
+          git checkout -b custom-full 69cea8d
+
+      - name: Modify server and key
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/43.139.84.159:21116/g' src/config.rs
+          sed -i 's|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|1bi7AwZ3QaAdekGAZtNxr8KHx+FOsN16fcr94sFWvE8=|g' src/config.rs
+
+      - name: Add fixed password
+        run: |
+          cat > add_pass.py << 'PYEOF'
+          with open('src/config.rs', 'r') as f:
+              lines = f.readlines()
+
+          for i, line in enumerate(lines):
+              if 'pub static ref HARD_SETTINGS' in line and 'Default::default()' in line:
+                  indent = line[:len(line) - len(line.lstrip())]
+                  lines[i] = f'{indent}pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {{\n'
+                  lines.insert(i+1, f'{indent}        let mut m = HashMap::new();\n')
+                  lines.insert(i+2, f'{indent}        m.insert("password".to_string(), "0198d738abd01713fc6497c05c62c09f5bf487907d4f8b20124fba83a447cee033".to_string());\n')
+                  lines.insert(i+3, f'{indent}        RwLock::new(m)\n')
+                  lines.insert(i+4, f'{indent}    }};\n')
+                  break
+
+          with open('src/config.rs', 'w') as f:
+              f.writelines(lines)
+          PYEOF
+          python3 add_pass.py
+
+      - name: Commit and push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/config.rs
+          git commit -m "Custom: server, key, and fixed password"
+          git push origin custom-full
+          
+
+
