@@ -1,0 +1,30 @@
+name: Fix syntax
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: custom-full
+      - name: Fix syntax
+        run: |
+          python3 -c "
+          with open('src/config.rs', 'r') as f:
+              c = f.read()
+          c = c.replace('= Default::default();\n{', '= {')
+          with open('src/config.rs', 'w') as f:
+              f.write(c)
+          print('Fixed!')
+          "
+      - name: Commit
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add src/config.rs
+          git commit -m "Fix syntax"
+          git push origin custom-full
+          
+
+
