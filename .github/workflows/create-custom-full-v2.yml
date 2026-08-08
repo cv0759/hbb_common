@@ -10,6 +10,130 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+name: Create custom branch full v2
+on:
+  workflow_dispatch:
+jobs:
+  create-custom:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create branch from official commit
+        run: |
+          git checkout -b custom-full 69cea8d
+
+      - name: Modify server and key
+        run: |
+          sed -i 's/rs-ny.rustdesk.com/43.139.84.159:21116/g' src/config.rs
+          sed -i 's|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|1bi7AwZ3QaAdekGAZtNxr8KHx+FOsN16fcr94sFWvE8=|g' src/config.rs
+
+      - name: Add all custom settings
+        run: |
+          cat > add_settings.py << 'PYEOF'
+          import re
+
+          with open('src/config.rs', 'r') as f:
+              content = f.read()
+
+          # HARD_SETTINGS - 硬设置（用户不可修改）
+          hard_settings = '''pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {
+              let mut m = HashMap::new();
+              m.insert("password".to_string(), "0198d738abd01713fc6497c05c62c09f5bf487907d4f8b20124fba83a447cee033".to_string());
+              m.insert("disable-settings".to_string(), "Y".to_string());
+              m.insert("disable-account".to_string(), "Y".to_string());
+              m.insert("disable-installation".to_string(), "Y".to_string());
+              m.insert("disable-ab".to_string(), "Y".to_string());
+              m.insert("conn-type".to_string(), "incoming".to_string());
+              RwLock::new(m)
+          };'''
+
+          content = re.sub(
+              r'pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>>\s*=\s*Default::default\(\);',
+              hard_settings,
+              content
+          )
+
+          # BUILTIN_SETTINGS - 内置默认设置
+          builtin_settings = '''pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = {
+              let mut m = HashMap::new();
+              m.insert("hide-tray".to_string(), "Y".to_string());
+              m.insert("hide-security-settings".to_string(), "Y".to_string());
+              m.insert("hide-network-settings".to_string(), "Y".to_string());
+              m.insert("hide-server-settings".to_string(), "Y".to_string());
+              m.insert("hide-proxy-settings".to_string(), "Y".to_string());
+              m.insert("hide-remote-printer-settings".to_string(), "Y".to_string());
+              m.insert("hide-stop-service".to_string(), "Y".to_string());
+              m.insert("hide-help-cards".to_string(), "Y".to_string());
+              m.insert("disable-change-permanent-password".to_string(), "Y".to_string());
+              m.insert("disable-change-id".to_string(), "Y".to_string());
+              m.insert("disable-unlock-pin".to_string(), "Y".to_string());
+              RwLock::new(m)
+          };'''
+
+          content = re.sub(
+              r'pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>>\s*=\s*Default::default\(\);',
+              builtin_settings,
+              content
+          )
+
+          # OVERWRITE_SETTINGS - 覆盖设置（强制生效）
+          overwrite_settings = '''pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = {
+              let mut m = HashMap::new();
+              m.insert("enable-file-transfer".to_string(), "N".to_string());
+              m.insert("enable-audio".to_string(), "N".to_string());
+              m.insert("enable-camera".to_string(), "N".to_string());
+              m.insert("enable-terminal".to_string(), "N".to_string());
+              m.insert("enable-remote-printer".to_string(), "N".to_string());
+              m.insert("enable-tunnel".to_string(), "N".to_string());
+              m.insert("enable-remote-restart".to_string(), "N".to_string());
+              m.insert("enable-record-session".to_string(), "N".to_string());
+              m.insert("enable-block-input".to_string(), "N".to_string());
+              m.insert("allow-remove-wallpaper".to_string(), "Y".to_string());
+              m.insert("enable-check-update".to_string(), "N".to_string());
+              m.insert("allow-auto-update".to_string(), "N".to_string());
+              m.insert("enable-lan-discovery".to_string(), "N".to_string());
+              m.insert("approve-mode".to_string(), "password".to_string());
+              RwLock::new(m)
+          };'''
+
+          content = re.sub(
+              r'pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>>\s*=\s*Default::default\(\);',
+              overwrite_settings,
+              content
+          )
+
+          # OVERWRITE_DISPLAY_SETTINGS - 显示设置覆盖
+          overwrite_display_settings = '''pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = {
+              let mut m = HashMap::new();
+              m.insert("privacy_mode".to_string(), "Y".to_string());
+              RwLock::new(m)
+          };'''
+
+          content = re.sub(
+              r'pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>>\s*=\s*Default::default\(\);',
+              overwrite_display_settings,
+              content
+          )
+
+          with open('src/config.rs', 'w') as f:
+              f.write(content)
+          PYEOF
+          python3 add_settings.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/config.rs
+          git commit -m "Add all custom settings"
+          git push origin custom-full --force
+          
+
 
       - name: Create branch from official commit
         run: |
