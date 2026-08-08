@@ -1,0 +1,32 @@
+name: Fix config v3
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: custom-full
+      - name: Fix syntax
+        run: |
+          python3 -c "
+          with open('src/config.rs', 'r') as f:
+              c = f.read()
+          c = c.replace('pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();\n{', 'pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = {')
+          c = c.replace('pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();\n{', 'pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = {')
+          c = c.replace('pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();\n{', 'pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = {')
+          with open('src/config.rs', 'w') as f:
+              f.write(c)
+          print('Fixed!')
+          "
+      - name: Commit
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add src/config.rs
+          git commit -m "Fix config syntax"
+          git push origin custom-full
+          
+
+
