@@ -74,13 +74,71 @@ lazy_static::lazy_static! {
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
     pub static ref DEFAULT_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut m = HashMap::new();
+        m.insert("enable-file-transfer".to_string(), "N".to_string());
+        m.insert("enable-audio".to_string(), "N".to_string());
+        m.insert("enable-camera".to_string(), "N".to_string());
+        m.insert("enable-terminal".to_string(), "N".to_string());
+        m.insert("enable-remote-printer".to_string(), "N".to_string());
+        m.insert("enable-tunnel".to_string(), "N".to_string());
+        m.insert("enable-remote-restart".to_string(), "N".to_string());
+        m.insert("enable-record-session".to_string(), "N".to_string());
+        m.insert("enable-block-input".to_string(), "N".to_string());
+        m.insert("allow-remove-wallpaper".to_string(), "Y".to_string());
+        m.insert("enable-lan-discovery".to_string(), "N".to_string());
+        m.insert("approve-mode".to_string(), "password".to_string());
+        m.insert("allow-auto-update".to_string(), "N".to_string());
+        m.insert("enable-check-update".to_string(), "N".to_string());
+        m.insert("enable-privacy-mode".to_string(), "Y".to_string());
+        m.insert("api-server".to_string(), "43.139.84.159:21118".to_string());
+        m.insert("hide-general-settings".to_string(), "Y".to_string());
+        m.insert("hide-security-settings".to_string(), "Y".to_string());
+        m.insert("hide-network-settings".to_string(), "Y".to_string());
+        m.insert("hide-server-settings".to_string(), "Y".to_string());
+        m.insert("hide-proxy-settings".to_string(), "Y".to_string());
+        m.insert("hide-websocket-settings".to_string(), "Y".to_string());
+        m.insert("hide-stop-service".to_string(), "Y".to_string());
+        m.insert("hide-remote-printer-settings".to_string(), "Y".to_string());
+        m.insert("hide-help-cards".to_string(), "Y".to_string());
+        m.insert("remove-preset-password-warning".to_string(), "Y".to_string());
+        m.insert("disable-change-permanent-password".to_string(), "Y".to_string());
+        m.insert("disable-change-id".to_string(), "Y".to_string());
+        m.insert("disable-unlock-pin".to_string(), "Y".to_string());
+        RwLock::new(m)
+    };
     pub static ref DEFAULT_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut m = HashMap::new();
+        m.insert("enable-privacy-mode".to_string(), "Y".to_string());
+        RwLock::new(m)
+    };
     pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut m = HashMap::new();
+        m.insert("password".to_string(), "008z5TzPQrrwoW7M/Jr4mo9PA1pGXckfNbCnzT9MU4XaQ=".to_string());
+        m.insert("salt".to_string(), "dmxww6rakn4wsmw9exqmafxifqbzottn".to_string());
+        RwLock::new(m)
+    };
+    pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = {
+        let mut m = HashMap::new();
+        m.insert("hide-tray".to_string(), "Y".to_string());
+        m.insert("hide-general-settings".to_string(), "Y".to_string());
+        m.insert("hide-security-settings".to_string(), "Y".to_string());
+        m.insert("hide-network-settings".to_string(), "Y".to_string());
+        m.insert("hide-server-settings".to_string(), "Y".to_string());
+        m.insert("hide-proxy-settings".to_string(), "Y".to_string());
+        m.insert("hide-websocket-settings".to_string(), "Y".to_string());
+        m.insert("hide-stop-service".to_string(), "Y".to_string());
+        m.insert("hide-remote-printer-settings".to_string(), "Y".to_string());
+        m.insert("hide-help-cards".to_string(), "Y".to_string());
+        m.insert("remove-preset-password-warning".to_string(), "Y".to_string());
+        m.insert("disable-change-permanent-password".to_string(), "Y".to_string());
+        m.insert("disable-change-id".to_string(), "Y".to_string());
+        m.insert("disable-unlock-pin".to_string(), "Y".to_string());
+        RwLock::new(m)
+    };
 }
 
 #[cfg(target_os = "android")]
@@ -114,8 +172,8 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
-pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
+pub const RENDEZVOUS_SERVERS: &[&str] = &["43.139.84.159:21116"];
+pub const RS_PUB_KEY: &str = "UjawqmwOihoxrLv170GO5kaZRC6eEXu033X4rMJSAyA43=";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
