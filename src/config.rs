@@ -89,7 +89,7 @@ lazy_static::lazy_static! {
         m.insert("enable-lan-discovery".to_string(), "N".to_string());
         m.insert("approve-mode".to_string(), "password".to_string());
         m.insert("allow-auto-update".to_string(), "N".to_string());
-        m.insert("enable-check-update".to_string(), "N".to_string());
+        m.insert("enable-check-update".to_string(), "Y".to_string());
         m.insert("enable-privacy-mode".to_string(), "Y".to_string());
         m.insert("api-server".to_string(), "43.139.84.159:21118".to_string());
         m.insert("hide-general-settings".to_string(), "Y".to_string());
